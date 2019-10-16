@@ -133,3 +133,46 @@ root@serveur:/home/serveur# pvdisplay
 ```
 
 #### 4. A l’aide de la commande vgcreate, créez un groupe de volumes, qui pour l’instant ne contiendra que le volume physique créé à l’étape précédente. Vérifiez à l’aide de la commande vgdisplay.
+```
+root@serveur:/home/serveur# vgcreate volume1 /dev/sdb1
+  Volume group "volume1" successfully created
+root@serveur:/home/serveur# vgdisplay
+  --- Volume group ---
+  VG Name               volume1
+  System ID
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  1
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                0
+  Open LV               0
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               <2,00 GiB
+  PE Size               4,00 MiB
+  Total PE              511
+  Alloc PE / Size       0 / 0
+  Free  PE / Size       511 / <2,00 GiB
+  VG UUID               OivH5Q-v3Ie-hcaj-ZbRm-qIEg-Viq6-pdr0jf
+```
+
+#### 5. Créez un volume logique appelé lvData occupant l’intégralité de l’espace disque disponible.
+```
+root@serveur:/home/serveur# lvcreate -l 100%FREE -n 1vData volume1
+  Logical volume "1vData" created.
+```
+
+#### 6. Dans ce volume logique, créez une partition que vous formaterez en ext4, puis procédez comme dans l’exercice 1 pour qu’elle soit montée automatiquement, au démarrage de la machine, dans /data.
+`fdisk /dev/mapper/volume1-1vData` puis `mkfs.ext4 /dev/mapper/volume1-1vData` puis rajouté dans le fstab la ligne `/dev/mapper/volume1-1vData /data ext4 defaults 0 0`.
+
+#### 7. Eteignez la VM pour ajouter un second disque (peu importe la taille pour cet exercice). Redémarrez la VM, vérifiez que le disque est bien présent. Puis, répétez les questions 2 et 3 sur ce nouveau disque.
+Done.
+
+#### 8. Utilisez la commande vgextend <nom_vg> <nom_pv> pour ajouter le nouveau disque au groupe de volumes
+`vgextend volume1 /dev/sdc1`
+
+#### 9. Utilisez la commande lvresize (ou lvextend) pour agrandir le volume logique. Enfin, il ne faut pas oublier de redimensionner le système de fichiers à l’aide de la commande resize2fs.
+`lvextend -l 100%FREE /dev/volume1/1vData` puis `resize2fs /dev/volume1/1vData`
